@@ -60,7 +60,7 @@ public class Server: IDisposable
                         
                         if (int.TryParse(payload, out int threadAmount))
                         {
-                            DataManager.UpdateThreadAmount(threadAmount);
+                            DataManager.UpdateThreadAmount(clientId, threadAmount);
                             payloadToSend = $"Thread config updated successfully. Thread amount is set to {threadAmount}.";
                         }
                         else

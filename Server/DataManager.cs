@@ -3,8 +3,7 @@
 public class DataManager
 {
     private static readonly Dictionary<long, DataPayload> _clientData = new();
-    private static int _threadAmount = 1;
-    private static readonly object _threadAmountLock = new();
+    private static Dictionary<long, int> _threadAmount = new();
     
     public static void StoreClientData(long clientId, DataPayload data)
     {
@@ -14,11 +13,11 @@ public class DataManager
         }
     }
 
-    public static void UpdateThreadAmount(int newAmnt)
+    public static void UpdateThreadAmount(long clientId, int newAmnt)
     {
-        lock(_threadAmountLock)
+        lock(_threadAmount)
         {
-            _threadAmount = newAmnt;
+            _threadAmount[clientId] = newAmnt;
         }
     }
 
@@ -36,16 +35,29 @@ public class DataManager
         {
             _clientData.Remove(clientId);
         }
+        
+        lock(_threadAmount)
+        {
+            _threadAmount.Remove(clientId);
+        }
     }
 
     public static List<List<int>>? ProcessData(long clientId)
     {
         List<List<int>> matrixA, matrixB;
-        int k;
+        int k, threadAmount;
+
+        lock (_threadAmount)
+        {
+            if (!_threadAmount.TryGetValue(clientId, out threadAmount))
+            {
+                threadAmount = 1;
+            }
+        }
             
         lock (_clientData)
         {
-            if (_clientData[clientId] == null)
+            if (!_clientData.TryGetValue(clientId, out var t))
                 return null;
 
             // Get data
@@ -56,8 +68,8 @@ public class DataManager
 
         // Divide rows
         int rows = matrixA.Count, columns = matrixA[0].Count;
-        int rowsPerThread = rows / _threadAmount;
-        Thread[] threads = new Thread[_threadAmount];
+        int rowsPerThread = rows / threadAmount;
+        Thread[] threads = new Thread[threadAmount];
         
         // Res matrix
         List<List<int>> matrixResult = new List<List<int>>();
@@ -67,10 +79,10 @@ public class DataManager
         }
         
         // Start threads
-        for (int t = 0; t < _threadAmount; t++)
+        for (int t = 0; t < threadAmount; t++)
         {
             int start = rowsPerThread * t;
-            int finish = (t == _threadAmount - 1) ? rows : start + rowsPerThread;
+            int finish = (t == threadAmount - 1) ? rows : start + rowsPerThread;
         
             threads[t] = new Thread(() =>
             {
