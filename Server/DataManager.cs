@@ -3,12 +3,22 @@
 public class DataManager
 {
     private static readonly Dictionary<long, DataPayload> _clientData = new();
+    private static int _threadAmount = 1;
+    private static readonly object _threadAmountLock = new();
     
     public static void StoreClientData(long clientId, DataPayload data)
     {
         lock (_clientData)
         {
             _clientData[clientId] = data;
+        }
+    }
+
+    public static void UpdateThreadAmount(int newAmnt)
+    {
+        lock(_threadAmountLock)
+        {
+            _threadAmount = newAmnt;
         }
     }
 
@@ -28,7 +38,7 @@ public class DataManager
         }
     }
 
-    public static List<List<int>>? ProcessData(long clientId, int threadAmount)
+    public static List<List<int>>? ProcessData(long clientId)
     {
         List<List<int>> matrixA, matrixB;
         int k;
@@ -46,8 +56,8 @@ public class DataManager
 
         // Divide rows
         int rows = matrixA.Count, columns = matrixA[0].Count;
-        int rowsPerThread = rows / threadAmount;
-        Thread[] threads = new Thread[threadAmount];
+        int rowsPerThread = rows / _threadAmount;
+        Thread[] threads = new Thread[_threadAmount];
         
         // Res matrix
         List<List<int>> matrixResult = new List<List<int>>();
@@ -57,10 +67,10 @@ public class DataManager
         }
         
         // Start threads
-        for (int t = 0; t < threadAmount; t++)
+        for (int t = 0; t < _threadAmount; t++)
         {
             int start = rowsPerThread * t;
-            int finish = (t == threadAmount - 1) ? rows : start + rowsPerThread;
+            int finish = (t == _threadAmount - 1) ? rows : start + rowsPerThread;
         
             threads[t] = new Thread(() =>
             {

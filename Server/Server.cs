@@ -55,6 +55,19 @@ public class Server: IDisposable
                         typeToSend = MessageType.CONNECT;
                         payloadToSend = "Connected successfully!";
                         break;
+                    case MessageType.CONFIG:
+                        typeToSend = MessageType.CONFIG;
+                        
+                        if (int.TryParse(payload, out int threadAmount))
+                        {
+                            DataManager.UpdateThreadAmount(threadAmount);
+                            payloadToSend = $"Thread config updated successfully. Thread amount is set to {threadAmount}.";
+                        }
+                        else
+                        {
+                            payloadToSend = "Invalid number of threads.";
+                        }
+                        break;
                     case MessageType.DATA:
                         var data = JsonSerializer.Deserialize<DataPayload>(payload);
                         DataManager.StoreClientData(clientId, data);
@@ -63,7 +76,7 @@ public class Server: IDisposable
                         payloadToSend = "Server received your data.";
                         break;
                     case MessageType.START:
-                        res = Task.Run(() => DataManager.ProcessData(clientId, 6)); 
+                        res = Task.Run(() => DataManager.ProcessData(clientId)); 
                         
                         typeToSend = MessageType.START;
                         payloadToSend = "Server started processing your data.";
@@ -95,6 +108,7 @@ public class Server: IDisposable
                         }
                         break;
                     case MessageType.DISCONNECT:
+                        DataManager.RemoveClientData(clientId);
                         clientSocket.Shutdown(SocketShutdown.Both);
                         clientSocket.Close();
                         return;

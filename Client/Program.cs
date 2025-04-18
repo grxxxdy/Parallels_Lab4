@@ -6,10 +6,16 @@ class Program
 {
     static void Main(string[] args)
     {
+        int threadAmount = 6;
+        
         // Connect the client
         Client client = new Client();
         Console.WriteLine("\nTrying to connect to the server.");
         client.Connect("192.168.68.111", 5000);
+        
+        // Set config
+        Console.WriteLine("Sending a request to update the config to the server.");
+        client.UpdateConfig(threadAmount);
         
         // Create matrices
         DataPayload data = new DataPayload();
@@ -23,8 +29,8 @@ class Program
 
         data.K = k;
         
-        FillWithRandsParallel(data.MatrixA, rows, columns, 6);
-        FillWithRandsParallel(data.MatrixB, rows, columns, 6);
+        FillWithRandsParallel(data.MatrixA, rows, columns, threadAmount);
+        FillWithRandsParallel(data.MatrixB, rows, columns, threadAmount);
         
         Console.WriteLine("Created matrices:\nMatrix A:");
         PrintMatrix(data.MatrixA, rows, columns);

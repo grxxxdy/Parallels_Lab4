@@ -24,6 +24,21 @@ public class Client : IDisposable
         Console.WriteLine($"Server response of type \"{type}\": {payload}\n");
     }
 
+    public void UpdateConfig(int threadAmount)
+    {
+        if (_socket == null || !_socket.IsBound)
+            return;
+        
+        // Send message
+        using NetworkStream stream = new NetworkStream(_socket);
+        
+        MessageManager.SendMessage(stream, MessageType.CONFIG, threadAmount.ToString());
+        
+        // Read response
+        var (type, payload) = MessageManager.ReadMessage(stream);
+        Console.WriteLine($"Server response of type \"{type}\": {payload}\n");
+    }
+
     public void SendData(string payloadToSend)
     {
         if (_socket == null || !_socket.IsBound)

@@ -7,5 +7,6 @@ public enum MessageType
     START,
     RESULT,
     DISCONNECT,
-    UNKNOWN
+    UNKNOWN,
+    CONFIG
 }
