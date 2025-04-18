@@ -54,10 +54,10 @@ public class Client : IDisposable
         Console.WriteLine($"Server response of type \"{type}\": {payload}\n");
     }
 
-    public void GetResult()
+    public bool GetResult()
     {
         if (_socket == null || !_socket.IsBound)
-            return;
+            return false;
         
         // Send message
         using NetworkStream stream = new NetworkStream(_socket);
@@ -78,7 +78,11 @@ public class Client : IDisposable
                 Console.WriteLine("Calculated result:");
                 Program.PrintMatrix(res, res.Count, res[0].Count);
             }
+
+            return true;
         }
+
+        return false;
     }
 
     public void Disconnect()

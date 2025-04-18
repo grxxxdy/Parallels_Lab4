@@ -6,5 +6,6 @@ public enum MessageType
     DATA,
     START,
     RESULT,
-    DISCONNECT
+    DISCONNECT,
+    UNKNOWN
 }

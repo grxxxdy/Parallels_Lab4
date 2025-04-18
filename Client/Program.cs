@@ -41,15 +41,22 @@ class Program
         client.RequestDataProcessing();
 
         // Get result
-        Console.WriteLine("Sending a result request to the server.");
-        client.GetResult();
+        while (true)
+        {
+            Console.WriteLine("Sending a result request to the server.");
+
+            if (client.GetResult())
+            {
+                break;
+            }
+            
+            Thread.Sleep(1000);
+        }
         
-        Thread.Sleep(5 * 1000);
-        
-        Console.WriteLine("Sending a result request to the server.");
-        client.GetResult();
-        
+        // Disconnect
         client.Disconnect();
+
+        Console.ReadKey();
     }
     
     private static void FillWithRandsParallel(List<List<int>> matrix, int rows, int columns, int threadsAmount)

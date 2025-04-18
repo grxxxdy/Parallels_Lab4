@@ -21,12 +21,12 @@ public class Server: IDisposable
         _socket.Bind(tcpEndpoint);
         _socket.Listen(10);
         
-        Console.WriteLine($"Server running on {ip}:{port}.");
+        Console.WriteLine($"\nServer running on {ip}:{port}.");
 
         while (true)
         {
             var client = _socket.Accept();
-            Console.WriteLine("Client conneted.");
+            Console.WriteLine("\nClient connected.");
 
             Thread clientThread = new Thread(() => HandleClient(client));
             clientThread.Start();
@@ -44,41 +44,53 @@ public class Server: IDisposable
             while (true)
             {
                 var (type, payload) = MessageManager.ReadMessage(stream);
-                Console.WriteLine($"Received a message of type {type} from client: {payload}");
+                Console.WriteLine($"\nReceived a message of type {type} from client {clientId}: {payload}");
 
+                MessageType typeToSend = MessageType.UNKNOWN;
+                string payloadToSend = "";
+                
                 switch (type)
                 {
                     case MessageType.CONNECT:
-                        MessageManager.SendMessage(stream, MessageType.CONNECT, "Connected successfully!");
+                        typeToSend = MessageType.CONNECT;
+                        payloadToSend = "Connected successfully!";
                         break;
                     case MessageType.DATA:
                         var data = JsonSerializer.Deserialize<DataPayload>(payload);
                         DataManager.StoreClientData(clientId, data);
-                        MessageManager.SendMessage(stream, MessageType.DATA, "Server received your data!");
+                        
+                        typeToSend = MessageType.DATA;
+                        payloadToSend = "Server received your data.";
                         break;
                     case MessageType.START:
                         res = Task.Run(() => DataManager.ProcessData(clientId, 6)); 
-                        MessageManager.SendMessage(stream, MessageType.START, "Server started processing your data!");
+                        
+                        typeToSend = MessageType.START;
+                        payloadToSend = "Server started processing your data.";
                         break;
                     case MessageType.RESULT:
+                        typeToSend = MessageType.DATA;
+                        
                         if(res == null)
                         {
-                            MessageManager.SendMessage(stream, MessageType.DATA, "Data processing has not been started yet!");
+                            payloadToSend = "Data processing has not been started yet.";
                         }
                         else if (!res.IsCompleted)
                         {
-                            MessageManager.SendMessage(stream, MessageType.DATA, "Data is still processing!");
+                            payloadToSend = "Data is still processing.";
                         }
                         else
                         {
                             if (res.Result == null)
                             {
-                                MessageManager.SendMessage(stream, MessageType.DATA, "Data has not been processed: your data was empty!");
+                                payloadToSend = "Data has not been processed: your data was empty.";
                             }
                             else
                             {
                                 var jsonData = JsonSerializer.Serialize(res.Result);
-                                MessageManager.SendMessage(stream, MessageType.RESULT, jsonData);
+                                
+                                typeToSend = MessageType.RESULT;
+                                payloadToSend = jsonData;
                             }
                         }
                         break;
@@ -87,6 +99,9 @@ public class Server: IDisposable
                         clientSocket.Close();
                         return;
                 }
+                
+                MessageManager.SendMessage(stream, typeToSend, payloadToSend);
+                Console.WriteLine($"Sent a message of type {typeToSend} to client {clientId}: \"{payloadToSend}\"");
             }
         }
         catch (Exception ex)
