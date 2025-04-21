@@ -93,7 +93,7 @@ public class Client : IDisposable
                 Console.WriteLine("Calculated result:");
                 Program.PrintMatrix(res, res.Count, res[0].Count);
             }
-
+            
             return true;
         }
 

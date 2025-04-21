@@ -11,6 +11,12 @@ public class MessageManager
         byte[] lengthBytes = BitConverter.GetBytes(messageBytes.Length);
         byte[] typeBytes = BitConverter.GetBytes((int)type);
         
+        if (BitConverter.IsLittleEndian)
+        {
+            Array.Reverse(typeBytes);
+            Array.Reverse(lengthBytes);
+        }
+        
         stream.Write(typeBytes, 0, 4);
         stream.Write(lengthBytes, 0, 4);
         stream.Write(messageBytes, 0, messageBytes.Length);
@@ -23,6 +29,12 @@ public class MessageManager
 
         stream.Read(typeBytes, 0, 4);
         stream.Read(lengthBytes, 0, 4);
+        
+        if (BitConverter.IsLittleEndian)
+        {
+            Array.Reverse(typeBytes);
+            Array.Reverse(lengthBytes);
+        }
 
         int length = BitConverter.ToInt32(lengthBytes, 0);
         byte[] messageBytes = new byte[length];
